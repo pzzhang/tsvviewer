@@ -1,0 +1,7 @@
+django
+numpy
+pyyaml
+tqdm
+pathos
+opencv-python-headless
+pillow

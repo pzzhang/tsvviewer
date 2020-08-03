@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>{{name_subsets_versions_labelcounts|first|first}} - TSV Viewer</title>
+	<script>
+      window.onload = function  () {
+        var li_ul = document.querySelectorAll(".col_ul li  ul");
+        li_ul[0].style.display = "block"
+        for (var i = 1; i < li_ul.length; i++) {
+            li_ul[i].style.display = "none"
+        };
+    
+        var exp_li = document.querySelectorAll(".col_ul li > span");
+        for (var i = 0; i < exp_li.length; i++) {
+            exp_li[i].style.cursor = "pointer";
+            exp_li[i].onclick = showul;
+        };
+        function showul () {
+            nextul = this.nextElementSibling;
+            if(nextul.style.display == "block")
+                nextul.style.display = "none";
+            else
+                nextul.style.display = "block";
+        }
+    }
+  </script>
+	<style type="text/css">
+	</style>
+</head>
+
+<body>
+    <ul class="col_ul">
+    {% for name, subsets_versions_labelcounts in name_subsets_versions_labelcounts %}
+    <li><span>{{ name }}</span>
+        <ul>
+            {% for subset, version, label_counts in subsets_versions_labelcounts %}
+            <li><span>{{ subset }} - {% if version > 0 %}v{{version}} - {% endif %}[{{ label_counts | length }}]</span>
+                <ul>
+                    <li>
+                        <a href="{% url 'detection:viewimages' %}?data={{ name }}&subset={{ subset }}&version={{ version }}&start_id=0" target='_blank'>any</a>
+                    </li>
+                    {% for i, l, c in label_counts %}
+                    <li>
+                        [{{ i }}]
+                        <a href="{% url 'detection:viewimages' %}?data={{ name }}&subset={{ subset }}&version={{ version }}&label={{ l }}&start_id=0" target='_blank'>{{ l }}</a>
+                        [{{ c }}]
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

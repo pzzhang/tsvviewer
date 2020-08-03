@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>TSV Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.2.1/typeahead.jquery.min.js"></script>
+
+    <link href="//fonts.googleapis.com/css?family=Roboto:300" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'viewer.css'%}?{% now 'U' %}">
+    <script src="{% static 'viewer.js' %}?{% now 'U' %}"></script>
+    <!-- <script src="{% static 'viewer.js' %}?v=4"></script> -->
+</head>
+
+<body onresize="resizeCallback()" onload="startup()" onkeydown="keydownCallback(event)">
+    <nav id="navbar" class="navbar navbar-expand-sm navbar-dark bg-primary py-0 fixed-top" style="background-color: #e3f2fd;">
+        <div class="navbar-header">
+            <a class="navbar-brand">Subset:&nbsp;<span id="subset_name"></span></a>
+        </div>
+        <ul class="navbar-nav">
+            <li>
+                <a class="nav-link pl-5 pr-0" style="cursor: auto;">Class:&nbsp;</a>
+            </li>
+            <form class="form-inline" onsubmit="return false;">
+                <input class="typeahead form-control" type="text" id="class_search" placeholder="Choose a class">
+            </form>
+            <li class="nav-item">
+                <a class="nav-link pr-3" onclick="onClickRandomClass()">Random Class</a>
+            </li>
+
+            <li class="dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown">Option</a>
+                <ul class="dropdown-menu">
+                    <li>
+                    <a onclick="document.getElementById('show_label').checked=!
+                        document.getElementById('show_label').checked; onClickShowlabel(); event.stopPropagation();">
+                        <input id="show_label" onchange="onClickShowlabel()" onclick="event.stopPropagation();"
+                            type="checkbox" />
+                        &nbsp;Show labels
+                    </a>
+                    </li>
+                    <li>
+                    <a onclick="document.getElementById('show_all').checked=!
+                        document.getElementById('show_all').checked; onClickShowall(); event.stopPropagation();">
+                        <input id="show_all" onchange="onClickShowall()" onclick="event.stopPropagation();"
+                            type="checkbox" />
+                        &nbsp;Show boxes from other classes
+                    </a>
+                    </li>
+                    <li>
+                    <a onclick="document.getElementById('show_textinfo').checked=!
+                        document.getElementById('show_textinfo').checked; onClickShowtextinfo(); event.stopPropagation();">
+                        <input id="show_textinfo" onchange="onClickShowtextinfo()" onclick="event.stopPropagation();"
+                            type="checkbox" />
+                        &nbsp;Show text info (above each image)
+                    </a>
+                    </li>
+                    <div class="dropdown-divider"></div>                    
+                    <li>
+                    <a onclick="document.getElementById('show_gt').checked=!
+                        document.getElementById('show_gt').checked; onClickShowGt(); event.stopPropagation();">
+                        <input id="show_gt" onchange="onClickShowGt()" onclick="event.stopPropagation();"
+                            type="checkbox" />
+                        &nbsp;Show ground truth boxes
+                    </a>
+                    </li>
+                    <li>
+                    <a onclick="document.getElementById('show_pred').checked=!
+                        document.getElementById('show_pred').checked; onClickShowPred(); event.stopPropagation();">
+                        <input id="show_pred" onchange="onClickShowPred()" onclick="event.stopPropagation();"
+                            type="checkbox" />
+                        &nbsp;Show predicted boxes
+                    </a>
+                    </li>
+                    </ul>
+                </ul>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link">Help</a>
+            </li>
+        </ul>
+    </nav>
+    
+    <div id="main">
+        <div id="viewer" onclick="closeViewer()">
+            <div id="viewer_wrap">
+                <svg id="viewer_svg" style="box-shadow: none;">
+                    <image id="viewer_img"></image>
+                </svg>
+            </div>
+        </div>
+        <div class="row" id="grid" style="margin-top: 50px"></div>
+    </div>
+
+    <div class="page_nav">
+        {% if previous_link %}
+        <a href="{{ previous_link }}">Previous</a>
+        {% endif %} 
+        {% if next_link %}
+        <a href="{{ next_link }}">Next</a>
+        {% endif%}
+    </div>
+
+    <script>
+        var all_type_to_rects = JSON.parse("{{ all_type_to_rects|escapejs }}");
+        var all_url = JSON.parse("{{ all_url|escapejs }}");
+        var label_count = JSON.parse("{{label_count|escapejs}}");
+
+        {% if all_key %}
+        let all_key = JSON.parse("{{ all_key |escapejs }}");
+        {% else %}
+        let all_key = []
+        {% endif %}
+    </script>
+</body>
+</html>

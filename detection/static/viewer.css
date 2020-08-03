@@ -1,0 +1,154 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+#main {
+    padding: 0px 15px;
+}
+
+p {
+    margin-bottom: 0;
+}
+
+table#image_table {
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+ul#label_list {
+    list-style: none;
+}
+
+.sticky {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+#label_checks {
+    background: #555;
+    color: #f1f1f1;
+    position: fixed;
+    z-index: 100;
+}
+
+#label_checks table {
+    font-size: small;
+}
+
+#viewer {
+    font-size: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, .8);
+    z-index: 30;
+    visibility: hidden;
+}
+
+#viewer_wrap {
+    border: 3px solid white;
+}
+
+.row {
+    display: -ms-flexbox;
+    /* IE 10 */
+    display: flex;
+    -ms-flex-wrap: wrap;
+    /* IE 10 */
+    flex-wrap: wrap;
+    padding: 0 4px;
+}
+
+.row svg {
+    cursor: zoom-in;
+}
+
+div {
+    word-wrap: break-word;
+    /*font-family: Arial*/
+    /*font-size: 10px;*/
+    font-size: small;
+    /*border:1px solid #000000;*/
+}
+
+/* Create two equal columns that sits next to each other */
+
+.column {
+    padding: 0 4px;
+}
+
+.column img {
+    margin-top: 8px;
+    vertical-align: middle;
+}
+
+/* Style the buttons */
+.btn {
+    border: none;
+    outline: none;
+    padding: 6px 10px;
+    background-color: #f1f1f1;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.btn:hover {
+    background-color: #ddd;
+}
+
+.btn.active {
+    background-color: #666;
+    color: white;
+}
+
+.page_nav {
+    text-align: center;
+    font-size: 36px;
+}
+
+.form-control {
+    height: 24px;
+    width: 140px !important;
+    font-size: 14px;
+}
+
+.tt-menu {
+    width: 180px;
+    padding: 2px 8px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.tt-suggestion.tt-cursor {
+    background-color:  #0097cf;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: white;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    cursor: pointer;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: white;
+}
+
+/* .dropdown-item:hover {
+    background-color: #0097cf;
+} */
+
+.dropdown-menu>li>a {
+    font-size: 14px;
+    padding: 3px 20px;
+    white-space: nowrap;
+    cursor: pointer;
+}

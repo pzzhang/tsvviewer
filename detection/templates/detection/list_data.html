@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>TSV Viewer</title>
+	<style type="text/css">
+	</style>
+</head>
+
+<body>
+    <ul>
+    {% for name in names %}
+    <li><a href="{% url 'detection:overview' %}?data={{ name }}" target='_blank'>{{ name }}</a>
+    </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
+
