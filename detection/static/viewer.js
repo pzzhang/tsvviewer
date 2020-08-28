@@ -120,18 +120,18 @@ function add_svg_objects(svg, t, rects) {
 
 function add_svg_object_relations(svg, t, annotations) {
     rects = annotations["objects"]          // list of object rects
-    predicates = annotations["predicates"]  // list of human-readable predicate names
-    relations = annotations["relations"]    // list of relations, each as a triplet [o, s, p]
+    relations = annotations["relations"]    // list of relations, each as a dict
     for (let r = 0; r < relations.length; r++) {
-        let name = predicates[r]
-        let [s, o, p] = relations[r]
+        let name = relations[r]["class"]
+        let s = relations[r]["subj_id"]
+        let o = relations[r]["obj_id"]
         rc = rects[s]["rect"]
         s_cx = (rc[0] + rc[2]) / 2
         s_cy = (rc[1] + rc[3]) / 2
         rc = rects[o]["rect"]
         o_cx = (rc[0] + rc[2]) / 2
         o_cy = (rc[1] + rc[3]) / 2
-        relation_name = predicates[r]
+        relation_name = relations[r]["class"]
 
         color = "#00FF00"   // relation line color: green
         let svg_rel = create_svg_line(s_cx, s_cy, o_cx, o_cy, color, t);
@@ -170,7 +170,7 @@ function add_svg_object_relations(svg, t, annotations) {
 function add_svg_elements(svg, type_to_annotations) {
     for (let t in type_to_annotations) {
         add_svg_objects(svg, t, type_to_annotations[t]["objects"])
-        if ("predicates" in type_to_annotations[t])
+        if ("relations" in type_to_annotations[t])
             add_svg_object_relations(svg, t, type_to_annotations[t])
     }
 }
