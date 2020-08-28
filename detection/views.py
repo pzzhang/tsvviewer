@@ -50,8 +50,9 @@ def show_image(request):
         cache.set(data+subset+str(version), tsv)
 
     row = tsv.seek(idx)
+    if row[-1].startswith('http'):
+        return HttpResponseRedirect(row[-1])
     jpgbytestring = base64.b64decode(row[-1])
-
     return HttpResponse(jpgbytestring, content_type="image/jpeg")
 
 def retrieve_images(label_file, inverted, prediction_file, label, start_id, min_conf=-float('inf'), max_conf=float('inf')):
@@ -91,15 +92,15 @@ def retrieve_images(label_file, inverted, prediction_file, label, start_id, min_
     for i in idx[start_id:]:
         row_label = label_tsv.seek(i)
         key = row_label[0]
-        gt_rects = TSVFile.parse_annotation(row_label[1])['objects']
-        gt_rects = filter_rects(gt_rects, min_conf, max_conf)
-        pred_rects = []
+        gt = TSVFile.parse_annotation(row_label[1])
+        gt['objects'] = filter_rects(gt['objects'], min_conf, max_conf)
+        pred = {'objects': []}
         if prediction_tsv:
             row_label = prediction_tsv.seek(i)
-            pred_rects = TSVFile.parse_annotation(row_label[1])['objects']
-            pred_rects = filter_rects(pred_rects, min_conf, max_conf)
+            pred = TSVFile.parse_annotation(row_label[1])
+            pred['objects'] = filter_rects(pred['objects'], min_conf, max_conf)
 
-        yield (key, i, gt_rects, pred_rects)
+        yield (key, i, gt, pred)
 
 
 def view_image_js(request, data, subset, version, label, start_id, imKey=None, min_conf=None, max_image_shown=50):
@@ -124,13 +125,13 @@ def view_image_js(request, data, subset, version, label, start_id, imKey=None, m
     for k, v in sorted(inverted.items(), key=lambda x: x[0]):
         label_count.append((k, len(v)))
 
-    all_type_to_rects, all_url, all_key = [], [], []
+    all_type_to_annotations, all_url, all_key = [], [], []
     for key, idx, gt, pred in images:
         if imKey is None or imKey in key:
             all_key.append(key)
             all_url.append(reverse('detection:showimage') + \
                 '?data={}&subset={}&version={}&imgidx={}&key={}'.format(data, subset, version, idx, key))
-            all_type_to_rects.append({'gt': gt, 'pred': pred})
+            all_type_to_annotations.append({'gt': gt, 'pred': pred})
         if len(all_key) >= max_image_shown:
             break
 
@@ -140,11 +141,11 @@ def view_image_js(request, data, subset, version, label, start_id, imKey=None, m
         return reverse('detection:viewimages') + '?' + \
             '&'.join(['{}={}'.format(k, kwargs[k]) for k in kwargs])
 
-    context = {'all_type_to_rects': json.dumps(all_type_to_rects),
+    context = {'all_type_to_annotations': json.dumps(all_type_to_annotations),
                'all_url': json.dumps(all_url),
                'all_key': json.dumps(all_key),
                'previous_link': nav_link(max(0, start_id - max_image_shown)),
-               'next_link': nav_link(start_id + len(all_type_to_rects)),
+               'next_link': nav_link(start_id + len(all_type_to_annotations)),
                'black_list': '',
                'label_count' : json.dumps(label_count),
                }

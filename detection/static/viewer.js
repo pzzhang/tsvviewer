@@ -48,6 +48,33 @@ function create_svg_rect(rect, color, t) {
     return r
 }
 
+function create_svg_circle(cx, cy, radius, color, t) {
+    var r = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    r.setAttribute("vector-effect", "non-scaling-stroke");
+    r.setAttribute("stroke-alignment", "inner");
+    r.setAttribute("cx", cx);
+    r.setAttribute("cy", cy);
+    r.setAttribute("r", radius);
+    r.setAttribute("fill", color);
+    r.setAttribute("stroke", color);
+    r.setAttribute("stroke-width", "2");
+    return r
+}
+
+function create_svg_line(x1, y1, x2, y2, color, t) {
+    var r = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    r.setAttribute("vector-effect", "non-scaling-stroke");
+    r.setAttribute("x1", x1);
+    r.setAttribute("y1", y1);
+    r.setAttribute("x2", x2);
+    r.setAttribute("y2", y2);
+    if (t === 'pred')
+        r.setAttribute("stroke-dasharray", "10 5");
+    r.setAttribute("stroke-width", "2");
+    r.setAttribute("stroke", color);
+    return r
+}
+
 function create_svg_text(text, x, y, font_size, color) {
     let t = document.createElementNS("http://www.w3.org/2000/svg", "text");
     t.textContent = text
@@ -60,40 +87,95 @@ function create_svg_text(text, x, y, font_size, color) {
     return t
 }
 
-function add_svg_objects(svg, type_to_rects) {
-    for (let t in type_to_rects) {
-        for (let r = 0; r < type_to_rects[t].length; r++) {
-            if (!("rect" in type_to_rects[t][r]))
-                continue;
-            let rect = type_to_rects[t][r]["rect"];
-            let label = type_to_rects[t][r]["class"];
-            let attr = ""
-            if ("attributes" in type_to_rects[t][r])
-                attr = type_to_rects[t][r]["attributes"].join(", ")
+function add_svg_objects(svg, t, rects) {
+    for (let r = 0; r < rects.length; r++) {
+        if (!("rect" in rects[r]))
+            continue;
+        let rect = rects[r]["rect"];
+        let label = rects[r]["class"];
+        let attr = ""
+        if ("attributes" in rects[r])
+            attr = rects[r]["attributes"].join(", ")
 
-            let color = colors[label];
+        let color = colors[label];
 
-            let svg_r = create_svg_rect(rect, color, t);
-            svg_r.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_box" + String(r));
-            svg_r.setAttribute("class", label);
-            svg_r.setAttribute("type", t);
-            svg.appendChild(svg_r);
+        let svg_r = create_svg_rect(rect, color, t);
+        svg_r.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_box" + String(r));
+        svg_r.setAttribute("class", label);
+        svg_r.setAttribute("type", t);
+        svg.appendChild(svg_r);
 
-            let font_size = svg.viewBox.baseVal.width / svg.clientWidth * 13
-            label_text = label
-            if ("conf" in type_to_rects[t][r])
-                label_text += ":" + type_to_rects[t][r]["conf"].toFixed(3)
-            let svg_t = create_svg_text(label_text, rect[0] + 1, rect[1] + 1, font_size, color);
-            svg_t.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_text" + String(r));
-            svg.appendChild(svg_t);
-            svg_t = create_svg_text(attr, rect[0] + 1, rect[1] + 1 + font_size, font_size, color);
-            svg_t.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_att" + String(r));
-            svg.appendChild(svg_t);
-        }
+        let font_size = svg.viewBox.baseVal.width / svg.clientWidth * 13
+        label_text = label
+        if ("conf" in rects[r])
+            label_text += ":" + rects[r]["conf"].toFixed(3)
+        let svg_t = create_svg_text(label_text, rect[0] + 1, rect[1] + 1, font_size, color);
+        svg_t.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_text" + String(r));
+        svg.appendChild(svg_t);
+        svg_t = create_svg_text(attr, rect[0] + 1, rect[1] + 1 + font_size, font_size, color);
+        svg_t.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_att" + String(r));
+        svg.appendChild(svg_t);
     }
 }
 
-function add_svg_image_divs(all_url, all_key, all_type_to_rects) {
+function add_svg_object_relations(svg, t, annotations) {
+    rects = annotations["objects"]          // list of object rects
+    predicates = annotations["predicates"]  // list of human-readable predicate names
+    relations = annotations["relations"]    // list of relations, each as a triplet [o, s, p]
+    for (let r = 0; r < relations.length; r++) {
+        let name = predicates[r]
+        let [s, o, p] = relations[r]
+        rc = rects[s]["rect"]
+        s_cx = (rc[0] + rc[2]) / 2
+        s_cy = (rc[1] + rc[3]) / 2
+        rc = rects[o]["rect"]
+        o_cx = (rc[0] + rc[2]) / 2
+        o_cy = (rc[1] + rc[3]) / 2
+        relation_name = predicates[r]
+
+        color = "#00FF00"   // relation line color: green
+        let svg_rel = create_svg_line(s_cx, s_cy, o_cx, o_cy, color, t);
+        svg_rel.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_rel" + String(r));
+        svg_rel.setAttribute("class", relation_name);
+        svg_rel.setAttribute("type", t);
+        svg.appendChild(svg_rel);
+
+        color = "#FF0000"   // subject color:red
+        radius = svg.viewBox.baseVal.width / svg.clientWidth * 1.5
+        let svg_sub = create_svg_circle(s_cx, s_cy, radius, color, t);
+        svg_sub.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_sub" + String(r));
+        svg_sub.setAttribute("class", relation_name);
+        svg_sub.setAttribute("type", t);
+        svg.appendChild(svg_sub);
+
+        color = "#800080"   // object color: purple
+        let svg_obj = create_svg_circle(o_cx, o_cy, radius, color, t);
+        svg_obj.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_obj" + String(r));
+        svg_obj.setAttribute("class", relation_name);
+        svg_obj.setAttribute("type", t);
+        svg.appendChild(svg_obj);
+
+        t_cx = (s_cx + o_cx) / 2
+        t_cy = (s_cy + o_cy) / 2
+        color = "#00FF00"   // relation name color: green
+        let font_size = svg.viewBox.baseVal.width / svg.clientWidth * 13
+        label_text = relation_name
+        let svg_t = create_svg_text(label_text, t_cx, t_cy, font_size, color);
+        svg_t.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_relname" + String(r));
+        svg.appendChild(svg_t);
+    }
+
+}
+
+function add_svg_elements(svg, type_to_annotations) {
+    for (let t in type_to_annotations) {
+        add_svg_objects(svg, t, type_to_annotations[t]["objects"])
+        if ("predicates" in type_to_annotations[t])
+            add_svg_object_relations(svg, t, type_to_annotations[t])
+    }
+}
+
+function add_svg_image_divs(all_url, all_key, all_type_to_annotations) {
     let image_cols = document.getElementById("grid").childElementCount;
     let j = 1;
     for (i = 0; i < all_url.length; i++) {
@@ -109,14 +191,14 @@ function add_svg_image_divs(all_url, all_key, all_type_to_rects) {
         } (i);
 
         let img = document.createElement("img");
-        img.onload = function(svg, preload_im, type_to_rects) {
+        img.onload = function(svg, preload_im, type_to_annotations) {
             return function() {
                 let svg_img = document.createElementNS("http://www.w3.org/2000/svg", "image");
                 svg_img.id = svg.getAttribute("id").replace("svg", "img");
                 svg_img.setAttributeNS("http://www.w3.org/1999/xlink", "href", preload_im.src);
                 svg.setAttribute("viewBox", "0 0 " + preload_im.naturalWidth + " " + preload_im.naturalHeight);
                 svg.appendChild(svg_img);
-                add_svg_objects(svg, type_to_rects);
+                add_svg_elements(svg, type_to_annotations);
                 update_svg_objects(svg, 
                     document.getElementById('show_label').checked,
                     document.getElementById('show_all').checked,
@@ -124,7 +206,7 @@ function add_svg_image_divs(all_url, all_key, all_type_to_rects) {
                     document.getElementById('show_pred').checked,
                     getUrlParameter(window.location.href, "label", ""));
             }
-        }(elem, img, all_type_to_rects[i]);
+        }(elem, img, all_type_to_annotations[i]);
         img.src = all_url[i]
 
         let id = "col" + j.toString();
@@ -140,11 +222,11 @@ function add_svg_image_divs(all_url, all_key, all_type_to_rects) {
             document.getElementById(id).appendChild(p);
         }
 
-        if (all_type_to_rects.length > i) {
-            let type_to_rects = all_type_to_rects[i];
-            for (let t in type_to_rects) {
+        if (all_type_to_annotations.length > i) {
+            let type_to_annotations = all_type_to_annotations[i];
+            for (let t in type_to_annotations) {
                 let img_info = ""
-                let rects = type_to_rects[t];
+                let rects = type_to_annotations[t]["objects"];
                 let all_class = {}
                 for (let j = 0; j < rects.length; j++) {
                     if ('class' in rects[j] && !rects[j]['class'].startsWith('-'))
@@ -192,8 +274,8 @@ function update_svg_objects(svg, showlabel, showall, show_gt, show_pred, cls) {
     }
 }
 
-function update_images(all_type_to_rects, showlabel, showall, show_textinfo, show_gt, show_pred, cls) {
-    for (i = 0; i < all_type_to_rects.length; i++) {
+function update_images(all_type_to_annotations, showlabel, showall, show_textinfo, show_gt, show_pred, cls) {
+    for (i = 0; i < all_type_to_annotations.length; i++) {
         let svg = document.getElementById('svg' + i);
         update_svg_objects(svg, showlabel, showall, show_gt, show_pred, cls);
 
@@ -257,7 +339,7 @@ function onClickShowPred() {
 }
 
 function onClick_abstraction() {
-    update_images(all_type_to_rects,
+    update_images(all_type_to_annotations,
         document.getElementById('show_label').checked,
         document.getElementById('show_all').checked,
         document.getElementById('show_textinfo').checked,
@@ -277,7 +359,7 @@ var resizeCallback = function(new_num_cols) {
 
     if (new_num_cols !== numberOfColumns) {
         createColumns(new_num_cols);
-        add_svg_image_divs(all_url, all_key, all_type_to_rects);
+        add_svg_image_divs(all_url, all_key, all_type_to_annotations);
         onClick_abstraction();
     }
 }
@@ -328,7 +410,7 @@ function setViewerSize(preload_im)
 function openViewer(img_id)
 {
     img_url = all_url[img_id];
-    type_to_rects = all_type_to_rects[img_id];
+    type_to_annotations = all_type_to_annotations[img_id];
     let img = document.createElement("img");
     img.onload = function(preload_im) {
         return function() {
@@ -338,7 +420,7 @@ function openViewer(img_id)
             svg_img.setAttributeNS("http://www.w3.org/1999/xlink", "href", preload_im.src);
             var svg = document.getElementById("viewer_svg");
             svg.setAttribute("viewBox", "0 0 " + preload_im.naturalWidth + " " + preload_im.naturalHeight);
-            add_svg_objects(svg, type_to_rects);
+            add_svg_elements(svg, type_to_annotations);
             update_svg_objects(svg, 
                 document.getElementById('show_label').checked,
                 document.getElementById('show_all').checked,
