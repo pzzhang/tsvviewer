@@ -4,6 +4,10 @@ This project is for browser-based TSV file visualization with the following feat
 * SVG-based frontend (as in Open Images visualization), showing clearer rendering effect.
 * Support two TSV data inputs:
     - Single TSV files with name `train.tsv`, `val.tsv`, `trainval.tsv`, `test.tsv`, as used in `quickdetection`.
+    - Three columns (separated by TAB) expected in a TSV file:
+        * `image_key`: could be any string. It is not used for visualization, but for easy debug.
+        * `annotation`: defined as in below "Supported formats".
+        * `base64_encoded_image|image url`: could be either base64-encoded image or image url.
     - Yaml based defination, as used in `maskrcnn-benchmark`. Expected entries include:  
         * `img`: image tsv file, with base64-encoded image in the last column.
         * `label`: label tsv file, with label in the last column
