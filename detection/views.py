@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, FileResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.cache import cache
@@ -52,6 +52,8 @@ def show_image(request):
     row = tsv.seek(idx)
     if row[-1].startswith('http'):
         return HttpResponseRedirect(row[-1])
+    if op.isfile(row[-1]):
+        return FileResponse(open(row[-1], 'rb'))
     jpgbytestring = base64.b64decode(row[-1])
     return HttpResponse(jpgbytestring, content_type="image/jpeg")
 
