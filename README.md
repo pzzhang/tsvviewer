@@ -1,5 +1,5 @@
 # TSV Viewer
-This tool is nearly a reimplementation (with some improvements) of the OpenImages visualization (https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F0h23m), to support tsv data format. Work done by Lei Zhang (https://www.leizhang.org/) and me (https://github.com/pzzhang). 
+This tool is nearly a reimplementation (with some improvements) of the [OpenImages visualization](https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F0h23m), to support tsv data format. Work done by [Lei Zhang](https://www.leizhang.org/) and [me](https://github.com/pzzhang). 
 
 This project is for browser-based TSV file visualization with the following features. 
 * Same backend design as in `quickdetection`.
@@ -27,7 +27,7 @@ This project is for browser-based TSV file visualization with the following feat
     `[{"caption": "A seagull flying close to the ocean."}, {"caption": "..."}]`
 
 ## Requirements
-* `Python 3.6` is tested.
+* `Python 3.6 & 3.9` is tested.
 
 ## Installation
 
