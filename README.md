@@ -7,7 +7,7 @@ This project is for browser-based TSV file visualization with the following feat
     - Three columns (separated by TAB) expected in a TSV file:
         * `image_key`: could be any string. It is not used for visualization, but for easy debug.
         * `annotation`: defined as in below "Supported formats".
-        * `base64_encoded_image|image url`: could be either base64-encoded image or image url.
+        * `base64_encoded_image|image url|image file path`: could be either base64-encoded image, or image url, or image file path.
     - Yaml based defination, as used in `maskrcnn-benchmark`. Expected entries include:  
         * `img`: image tsv file, with base64-encoded image in the last column.
         * `label`: label tsv file, with label in the last column
@@ -38,8 +38,9 @@ This project is for browser-based TSV file visualization with the following feat
     ```
 
 2. Second, copy (or link) a dataset into a sub-folder under `data`.
+    For simplicity, you may want to just link to my data folder `/data/home/pengchuanzhang/GitHub/tsvviewer/data` to get the first run.
 
-    For example, for a VOC dataset with `train.tsv` and `test.tsv`, the folder structure is as follows:
+    Another example: for a VOC dataset with `train.tsv` and `test.tsv`, the folder structure is as follows:
     ```
     .../tsvviewer/data$ tree voc20
     voc20
@@ -58,4 +59,5 @@ This project is for browser-based TSV file visualization with the following feat
     ```
     python manage.py runserver 0:8000
     ```
-    and open http://localhost:8000/detection to check the visualization.
+
+4. Forward the port to local laptop: Please forward this port 8000 from your aws machine to your laptop via [SSH port forwarding](https://www.ssh.com/academy/ssh/tunneling-example#local-forwarding) (which can also be done using [VS Code](https://code.visualstudio.com/docs/remote/ssh#_forwarding-a-port-creating-ssh-tunnel)). Then you can view the visualization at http://localhost:8000/detection.
