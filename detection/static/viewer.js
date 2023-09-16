@@ -229,12 +229,16 @@ function add_svg_image_divs(all_url, all_key, all_type_to_annotations) {
                 let rects = type_to_annotations[t]["objects"];
                 let all_class = {}
                 for (let j = 0; j < rects.length; j++) {
-                    if ('class' in rects[j] && !rects[j]['class'].startsWith('-'))
-                        all_class[rects[j]['class']] = 'x'
+                    if ('class' in rects[j] && !rects[j]['class'].startsWith('-')) {
+                        class_name = rects[j]['class'];
+                        if ("attributes" in rects[j])
+                            class_name += ":" + rects[j]["attributes"].join(",")
+                        all_class[class_name] = 'x';
+                    }
                 }
                 list_of_keys = Object.keys(all_class)
                 if (list_of_keys.length > 0) {
-                    keys = list_of_keys.join(', ');
+                    keys = list_of_keys.join('; ');
                     img_info = t.replace("gt", "Gt").replace('pred', "Pred") + ": " + keys;
                 }
                 for (let j = 0; j < rects.length; j++) {
