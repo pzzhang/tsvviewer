@@ -119,6 +119,43 @@ def create_anno_tsv_from_llama3v_json(args):
     tsv_writer(label_rows, label_file)
 
 
+def create_anno_tsv_from_llama3v_compare(args):
+    # args.anno_path = '/home/pengchuanzhang/tmp/mm-0011-sft-regioncaption-pengchuanzhang-f5xdr2/2024_04_18_llama3v_checkpoint_0024000/raw_results_as_core_eval-llama3v.json'
+    label_rows = []
+    miss_flist = []
+    with open(args.anno_path, "rb") as fid:
+        data = json.load(fid)
+        if args.max_nums > 0:
+            data = data[:args.max_nums]
+        total = len(data)
+        for i, row in enumerate(data):
+            progress_bar(i+1, total)
+            img_id = "_".join(map(str, row['id']))
+            img_path = row['image_path']
+            if not op.isfile(img_path):
+                miss_flist.append(img_path)
+                continue
+            caption = json.dumps({key: val for key, val in row.items() if key in ["prompt", "targets", "prediction"]})
+            anns = [
+                {
+                    "caption": caption,
+                }
+            ]
+            label_rows.append(
+                [
+                    img_id,
+                    json.dumps(anns),
+                    img_path,
+                ]
+            )
+
+    file_name = op.basename(args.anno_path).replace(".json", ".tsv")
+    label_file = os.path.join(args.output_path, file_name)
+    tsv_writer(label_rows, label_file)
+    with open(os.path.join(args.output_path, "missing_flist.txt"), "w") as fid:
+        fid.write("\n".join(miss_flist))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create Task Eval tsv dataset")
     parser.add_argument(
@@ -153,3 +190,5 @@ if __name__ == "__main__":
         create_anno_tsv_from_vcr(args)
     elif args.data_type == "llama3v_json":
         create_anno_tsv_from_llama3v_json(args)
+    elif args.data_type == "llama3v_compare":
+        create_anno_tsv_from_llama3v_compare(args)
