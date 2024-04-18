@@ -54,6 +54,8 @@ def create_anno_tsv_from_vcr(args):
     label_rows = []
     with open(args.anno_path, "rb") as fid:
         data = json.load(fid)
+        if args.max_nums > 0:
+            data = data[:args.max_nums]
         total = len(data)
         for i, row in enumerate(data):
             progress_bar(i+1, total)
@@ -69,6 +71,45 @@ def create_anno_tsv_from_vcr(args):
                 [
                     img_id+":"+caption,
                     accuracy,
+                    img_path,
+                ]
+            )
+
+    file_name = op.basename(args.anno_path).replace(".json", ".tsv")
+    label_file = os.path.join(args.output_path, file_name)
+    tsv_writer(label_rows, label_file)
+
+
+def create_anno_tsv_from_llama3v_json(args):
+    # args.anno_path = '/checkpoint/onevision/xlformer_assets/datasets/grounding/evals/vcr_qar/vcr.json'
+    # args.orig_data_path = "/checkpoint/onevision/xlformer_assets/datasets/grounding/evals/vcr_qar"
+    # args.data_path = "/home/pengchuanzhang/rsc/tsvviewer/data/images/grounding/evals/vcr_qar"
+    # args.output_path = "/home/pengchuanzhang/rsc/tsvviewer/data/vcr_direct/vcr_qar_eval"
+    label_rows = []
+    with open(args.anno_path, "rb") as fid:
+        data = json.load(fid)
+        if args.max_nums > 0:
+            data = data[:args.max_nums]
+        total = len(data)
+        for i, row in enumerate(data):
+            progress_bar(i+1, total)
+            img_id = row['id']
+            orig_image_path = os.path.join(args.orig_data_path, row['image'])
+            img_path = os.path.join(args.data_path, row['image'])
+            if not op.isfile(img_path):
+                destination_dir = op.dirname(img_path)
+                os.makedirs(destination_dir, exist_ok=True)
+                shutil.copy(orig_image_path, img_path)
+            caption = json.dumps(row["conversation"])
+            anns = [
+                {
+                    "caption": caption,
+                }
+            ]
+            label_rows.append(
+                [
+                    img_id,
+                    json.dumps(anns),
                     img_path,
                 ]
             )
@@ -105,7 +146,10 @@ if __name__ == "__main__":
         default="vcr",
         help="coco_json, imagelist_json, omnilabel_json",
     )
+    parser.add_argument("--max_nums", type=int, default=-1)
     args = parser.parse_args()
     print(args)
     if args.data_type == "vcr":
         create_anno_tsv_from_vcr(args)
+    elif args.data_type == "llama3v_json":
+        create_anno_tsv_from_llama3v_json(args)
