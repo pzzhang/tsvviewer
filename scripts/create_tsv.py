@@ -121,6 +121,8 @@ def create_anno_tsv_from_llama3v_json(args):
 
 def create_anno_tsv_from_llama3v_compare(args):
     # args.anno_path = '/home/pengchuanzhang/tmp/mm-0011-sft-regioncaption-pengchuanzhang-f5xdr2/2024_04_18_llama3v_checkpoint_0024000/raw_results_as_core_eval-llama3v.json'
+    # args.orig_data_path = "/home/pengchuanzhang/nextgen_mm/datasets/evals/grounding"
+    # args.data_path = "/home/pengchuanzhang/evals/grounding"
     label_rows = []
     miss_flist = []
     with open(args.anno_path, "rb") as fid:
@@ -131,10 +133,18 @@ def create_anno_tsv_from_llama3v_compare(args):
         for i, row in enumerate(data):
             progress_bar(i+1, total)
             img_id = "_".join(map(str, row['id']))
-            img_path = row['image_path']
-            if not op.isfile(img_path):
-                miss_flist.append(img_path)
+            orig_image_path = row['image_path'].replace("/mnt/wsfuse/", "/home/pengchuanzhang/pci-wsf/")
+            if not op.isfile(orig_image_path):
+                miss_flist.append(orig_image_path)
                 continue
+            if args.data_path is None:
+                img_path = orig_image_path
+            else:
+                img_path = orig_image_path.replace(args.orig_data_path, args.data_path)
+                if not op.isfile(img_path):
+                    destination_dir = op.dirname(img_path)
+                    os.makedirs(destination_dir, exist_ok=True)
+                    shutil.copy(orig_image_path, img_path)
             caption = json.dumps({key: val for key, val in row.items() if key in ["prompt", "targets", "prediction"]})
             anns = [
                 {
@@ -170,7 +180,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--data_path",
-        default="/home/pengchuanzhang/rsc/tsvviewer/data/images/013_1xacad_1xvip_17b_l2_sweep_lr_min_ratio_mcq_full_learn.yaml_run006/vcr1images",
+        # default="/home/pengchuanzhang/rsc/tsvviewer/data/images/013_1xacad_1xvip_17b_l2_sweep_lr_min_ratio_mcq_full_learn.yaml_run006/vcr1images",
+        default=None,
         help="path to Task Eval image data",
     )
     parser.add_argument(
