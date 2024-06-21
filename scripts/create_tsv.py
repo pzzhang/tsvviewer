@@ -86,20 +86,37 @@ def create_anno_tsv_from_llama3v_json(args):
     # args.data_path = "/home/pengchuanzhang/rsc/tsvviewer/data/images/grounding/evals/vcr_qar"
     # args.output_path = "/home/pengchuanzhang/rsc/tsvviewer/data/vcr_direct/vcr_qar_eval"
     label_rows = []
+    miss_flist = []
     with open(args.anno_path, "rb") as fid:
-        data = json.load(fid)
+        if args.anno_path.endswith(".json"):
+            data = json.load(fid)
+            file_name = op.basename(args.anno_path).replace(".json", ".tsv")
+        elif args.anno_path.endswith(".jsonl"):
+            data = [json.loads(line) for line in fid]
+            file_name = op.basename(args.anno_path).replace(".jsonl", ".tsv")
+        else:
+            raise ValueError(f"Unknown data type: {args.anno_path}")
         if args.max_nums > 0:
             data = data[:args.max_nums]
         total = len(data)
         for i, row in enumerate(data):
             progress_bar(i+1, total)
-            img_id = row['id']
-            orig_image_path = os.path.join(args.orig_data_path, row['image'])
-            img_path = os.path.join(args.data_path, row['image'])
-            if not op.isfile(img_path):
-                destination_dir = op.dirname(img_path)
-                os.makedirs(destination_dir, exist_ok=True)
-                shutil.copy(orig_image_path, img_path)
+            img_id = row['id'] if "id" in row else row["image"]
+            if args.orig_data_path is None:
+                orig_image_path = row['image'].replace("/mnt/wsfuse", "/home/pengchuanzhang/pci-wsf0")
+            else:
+                orig_image_path = os.path.join(args.orig_data_path, row['image'])
+            if not op.isfile(orig_image_path):
+                miss_flist.append(orig_image_path)
+                continue
+            if args.data_path is None:
+                img_path = orig_image_path
+            else:
+                img_path = os.path.join(args.data_path, row['image'])
+                if not op.isfile(img_path):
+                    destination_dir = op.dirname(img_path)
+                    os.makedirs(destination_dir, exist_ok=True)
+                    shutil.copy(orig_image_path, img_path)
             caption = json.dumps(row["conversation"])
             anns = [
                 {
@@ -114,9 +131,14 @@ def create_anno_tsv_from_llama3v_json(args):
                 ]
             )
 
-    file_name = op.basename(args.anno_path).replace(".json", ".tsv")
     label_file = os.path.join(args.output_path, file_name)
     tsv_writer(label_rows, label_file)
+    with open(os.path.join(args.output_path, "missing_flist.txt"), "w") as fid:
+        fid.write("\n".join(miss_flist))
+    # create yaml file
+    yaml_name = file_name.replace(".tsv", ".yaml")
+    with open(os.path.join(args.output_path, yaml_name), 'w') as fid:
+        fid.write(f"img: {file_name}")
 
 
 def create_anno_tsv_from_llama3v_compare(args):
@@ -175,7 +197,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--orig_data_path",
-        default="/checkpoint/onevision/xlformer_assets/datasets/grounding/vcr_eval_multichoice/vcr/vcr1images",
+        # default="/checkpoint/onevision/xlformer_assets/datasets/grounding/vcr_eval_multichoice/vcr/vcr1images",
+        default=None,
         help="path to Task Eval image data",
     )
     parser.add_argument(
