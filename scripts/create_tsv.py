@@ -256,6 +256,78 @@ def create_anno_tsv_from_llama3v_generation(args):
         fid.write(f"img: {file_name}")
 
 
+def create_anno_tsv_from_llama3v_RMscored(args):
+    # args.anno_path = '/home/pengchuanzhang/pci-wsf0/nextgen_mm/datasets/reasoning_rlhf/v4/generations/honeydew/grounding_datamix/vcr_with_context_cot_pci_no_reason_rewrite_in_answer_RSed.json'
+    # args.orig_data_path = None
+    # args.data_path = None
+    # args.output_path = "/home/pengchuanzhang/rsc/tsvviewer/data/RLHF6/vcr"
+    label_rows = []
+    miss_flist = []
+    with open(args.anno_path, "rb") as fid:
+        if args.anno_path.endswith(".json"):
+            data = json.load(fid)
+            file_name = op.basename(args.anno_path).replace(".json", ".tsv")
+        elif args.anno_path.endswith(".jsonl"):
+            data = [json.loads(line) for line in fid]
+            file_name = op.basename(args.anno_path).replace(".jsonl", ".tsv")
+        else:
+            raise ValueError(f"Unknown data type: {args.anno_path}")
+        if args.max_nums > 0:
+            data = data[:args.max_nums]
+        total = len(data)
+        for i, row in enumerate(data):
+            progress_bar(i+1, total)
+            img_id = row['id'] if "id" in row else row["image"]
+            if args.orig_data_path is None:
+                orig_image_path = row['image'].replace("/mnt/wsfuse", "/home/pengchuanzhang/pci-wsf0")
+            else:
+                orig_image_path = os.path.join(args.orig_data_path, row['image'])
+            if not op.isfile(orig_image_path):
+                miss_flist.append(orig_image_path)
+                continue
+            if args.data_path is None:
+                img_path = orig_image_path
+            else:
+                img_path = os.path.join(args.data_path, row['image'])
+                if not op.isfile(img_path):
+                    destination_dir = op.dirname(img_path)
+                    os.makedirs(destination_dir, exist_ok=True)
+                    shutil.copy(orig_image_path, img_path)
+            question = row['question']
+            target = row['target']
+            gt_score = row['gt_score']
+            best_candidate = {"value": "", "score": -100}
+            better_than_gts = []
+            for item in row['candidates'][1:]:
+                if item['score'] > best_candidate["score"]:
+                    best_candidate = item
+                if item['score'] > gt_score:
+                    better_than_gts.append(item)
+            label = f"correct:{len(row['candidates'][1:])};>=gt:{len(better_than_gts)}"
+            anns = [
+                {
+                    "class": label,
+                    "caption": json.dumps({"question": question, "target": target, "gt_score": gt_score, "best_candidate": best_candidate, "better_than_gts": better_than_gts}),
+                }
+            ]
+            label_rows.append(
+                [
+                    img_id,
+                    json.dumps(anns),
+                    img_path,
+                ]
+            )
+
+    label_file = os.path.join(args.output_path, file_name)
+    tsv_writer(label_rows, label_file)
+    with open(os.path.join(args.output_path, "missing_flist.txt"), "w") as fid:
+        fid.write("\n".join(miss_flist))
+    # create yaml file
+    yaml_name = file_name.replace(".tsv", ".yaml")
+    with open(os.path.join(args.output_path, yaml_name), 'w') as fid:
+        fid.write(f"img: {file_name}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create Task Eval tsv dataset")
     parser.add_argument(
@@ -296,3 +368,5 @@ if __name__ == "__main__":
         create_anno_tsv_from_llama3v_compare(args)
     elif args.data_type == "llama3v_generation":
         create_anno_tsv_from_llama3v_generation(args)
+    elif args.data_type == "llama3v_RMscored":
+        create_anno_tsv_from_llama3v_RMscored(args)
