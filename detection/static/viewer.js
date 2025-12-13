@@ -101,7 +101,7 @@ function add_svg_objects(svg, t, rects) {
 
         let svg_r = create_svg_rect(rect, color, t);
         svg_r.setAttribute("id", svg.getAttribute("id").replace("svg", "") + "_" + t + "_box" + String(r));
-        svg_r.setAttribute("class", label);
+        svg_r.setAttribute("data-label", label);
         svg_r.setAttribute("type", t);
         svg.appendChild(svg_r);
 
@@ -179,7 +179,7 @@ function add_svg_image_divs(all_url, all_key, all_type_to_annotations) {
     let image_cols = document.getElementById("grid").childElementCount;
     let j = 1;
     for (i = 0; i < all_url.length; i++) {
-        let elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");                
+        let elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         elem.id = 'svg' + i.toString();
         elem.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         elem.setAttribute("style", "border:1px solid #d3d3d3; width:100%; margin-bottom:1em");
@@ -199,7 +199,7 @@ function add_svg_image_divs(all_url, all_key, all_type_to_annotations) {
                 svg.setAttribute("viewBox", "0 0 " + preload_im.naturalWidth + " " + preload_im.naturalHeight);
                 svg.appendChild(svg_img);
                 add_svg_elements(svg, type_to_annotations);
-                update_svg_objects(svg, 
+                update_svg_objects(svg,
                     document.getElementById('show_label').checked,
                     document.getElementById('show_all').checked,
                     document.getElementById('show_gt').checked,
@@ -268,7 +268,7 @@ function update_svg_objects(svg, showlabel, showall, show_gt, show_pred, cls) {
         t = rect.getAttribute('type')
         type_visible = (t === 'gt' && show_gt) || (t === 'pred' && show_pred);
 
-        let box_visible = showall || rect.getAttribute("class").toLowerCase() === cls.toLowerCase() || cls === "";
+        let box_visible = showall || rect.getAttribute("data-label").toLowerCase() === cls.toLowerCase() || cls === "";
         rect.setAttribute("visibility", box_visible && type_visible ? "visible" : "hidden");
 
         t_label = svg.getElementById(rect.getAttribute("id").replace("_box", "_text"))
@@ -377,7 +377,7 @@ function createColumns(numberOfColumns) {
         div.className = "column";
         div.style.width = String(100 / numberOfColumns) + "%";
         grid.appendChild(div);
-    }      
+    }
 }
 
 function setViewerSize(preload_im)
@@ -425,7 +425,7 @@ function openViewer(img_id)
             var svg = document.getElementById("viewer_svg");
             svg.setAttribute("viewBox", "0 0 " + preload_im.naturalWidth + " " + preload_im.naturalHeight);
             add_svg_elements(svg, type_to_annotations);
-            update_svg_objects(svg, 
+            update_svg_objects(svg,
                 document.getElementById('show_label').checked,
                 document.getElementById('show_all').checked,
                 document.getElementById('show_gt').checked,
@@ -434,7 +434,7 @@ function openViewer(img_id)
 
             viewer = document.getElementById("viewer");
             viewer.imageid = img_id;
-            // force cursor change while mouse is not moving 
+            // force cursor change while mouse is not moving
             viewer.style.cursor = "zoom-out";
             viewer.style.visibility = "visible";
         }
@@ -458,7 +458,7 @@ function closeViewer()
     clearViewer();
 
     viewer = document.getElementById("viewer");
-    // force cursor change while mouse is not moving 
+    // force cursor change while mouse is not moving
     viewer.style.cursor = "";
     viewer.style.visibility = "hidden";
 }
@@ -525,10 +525,10 @@ function setUrlParameter(url, key, value) {
         if (value === undefined || value === null || value === '') { // Remove param if value is empty
             params = urlQueryString.replace(removeRegex, "$1");
             params = params.replace(/[&;]$/, "");
-    
+
         } else if (urlQueryString.match(updateRegex) !== null) { // If param exists already, update it
             params = urlQueryString.replace(updateRegex, "$1" + newParam);
-    
+
         } else if (urlQueryString == '') { // If there are no query strings
             params = '?' + newParam;
         } else { // Otherwise, add it to end of query string
@@ -631,9 +631,9 @@ function startup()
     if (!storageAvailable('localStorage')) {
         console.log("Too bad, no localStorage for us")
     }
-    
+
     window.addEventListener("popstate", function(e) {
-        document.location.reload();      
+        document.location.reload();
     });
 
     labelmap = new Array(label_count.length - 1)
